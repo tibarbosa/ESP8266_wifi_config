@@ -9,7 +9,7 @@ void setup()
   delay(100);
   Serial.println("Starting Wifi manager");
 
-  String ssid = "DisplaxIotHH_" + String(ESP.getChipId());
+  String ssid = "Iot_" + String(ESP.getChipId());
 
   wifi_man.init(ssid);
   wifi_man.autoConnect();
