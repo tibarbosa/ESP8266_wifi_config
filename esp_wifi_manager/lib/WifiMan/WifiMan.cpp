@@ -1,10 +1,13 @@
 #include "WifiMan.h"
 
 WifiMan::WifiMan()
-    : server(server_port)
+    : server(server_port), m_observer(nullptr)
 {
+    g_instance = this;
     m_ssid.clear();
     m_password.clear();
+    wifi_manager.setAPCallback(apModeCallback);
+    wifi_manager.setDebugOutput(false);
 }
 
 void WifiMan::init(String ssid, String password)
@@ -18,23 +21,15 @@ void WifiMan::init(String ssid)
     m_ssid = ssid;
 }
 
-void WifiMan::autoConnect()
+bool WifiMan::autoConnect()
 {
     if (m_ssid.isEmpty())
         m_ssid = "AP";
 
-    wifi_manager.autoConnect(m_ssid.c_str(), NULL);
+    bool ret = wifi_manager.autoConnect(m_ssid.c_str(), NULL);
     server.begin();
-}
 
-String WifiMan::getSsid()
-{
-    return m_ssid;
-}
-
-String WifiMan::getPassword()
-{
-    return m_password;
+    return ret;
 }
 
 void WifiMan::checkClientConnection()
@@ -75,7 +70,7 @@ void WifiMan::checkClientConnection()
                         // Web Page Heading
                         // client.println("<body><h1>ESP Web Server</h1>");
                         client.print("<body><h1>");
-                        client.print(wifi_manager.getConfigPortalSSID());
+                        client.print("IOT Module");
                         client.println("</h1>");
                         client.println("<p><a href=\"/btn/erase\"><button class=\"button\">Erase Wifi Config</button></a></p>");
                         client.println("</body></html>");
@@ -95,4 +90,25 @@ void WifiMan::checkClientConnection()
         header = "";
         client.stop();
     }
+}
+
+String WifiMan::getLocalIP()
+{
+    return WiFi.localIP().toString();
+}
+
+void WifiMan::apModeCallback(WiFiManager *wifi_manager)
+{
+    if (WifiMan::g_instance && WifiMan::g_instance->m_observer)
+        g_instance->m_observer->enteredApMode(wifi_manager->getConfigPortalSSID(), "", "192.168.4.1");
+}
+
+void WifiMan::registerObserver(Observer *obs)
+{
+    m_observer = obs;
+}
+
+void WifiMan::unregisterObserver()
+{
+    m_observer = nullptr;
 }
