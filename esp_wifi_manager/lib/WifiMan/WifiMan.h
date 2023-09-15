@@ -7,17 +7,27 @@
 class WifiMan
 {
 public:
+    class Observer
+    {
+    public:
+        virtual void enteredApMode(const String &ssid, const String &pwd, const String &ip) = 0;
+    };
+
     WifiMan();
     ~WifiMan() = default;
 
     void init(String ssid, String password);
     void init(String ssid);
-    void autoConnect();
-
-    String getSsid();
-    String getPassword();
+    bool autoConnect();
 
     void checkClientConnection();
+    String getLocalIP();
+
+    static void apModeCallback(WiFiManager *wifi_manager);
+    static void connectedCallback(void);
+
+    void registerObserver(Observer *obs);
+    void unregisterObserver();
 
 private:
     String m_ssid;
@@ -26,5 +36,8 @@ private:
     WiFiServer server;
     String header;
     WiFiManager wifi_manager;
+
+    static WifiMan *g_instance;
+    Observer *m_observer;
 };
 static const constexpr uint16_t server_port = 80;
